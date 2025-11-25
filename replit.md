@@ -229,11 +229,25 @@ VITE_FIREBASE_APP_ID
 
 ### Netlify Deployment Ready ✅
 The project includes all necessary files for Netlify deployment:
-- **index.js** - Root entry point for Netlify
+- **index.html** - Welcome page with instructions and session secret
+- **index.js** - Root entry point for production
 - **netlify.toml** - Netlify configuration with build and runtime settings
-- **NETLIFY_DEPLOYMENT.md** - Complete deployment guide
+- **NETLIFY_DEPLOY_STEPS.md** - Complete step-by-step deployment guide (use this!)
+- **QUICK_START.md** - Quick reference guide
 
-See NETLIFY_DEPLOYMENT.md for step-by-step deployment instructions.
+#### Session Secret (for Netlify)
+```
+38ca0962f6b4dbe6ba307f31af8c08dff568fb0ca7f6cdacd75871e84c4ae3b5
+```
+
+**Deployment Steps:**
+1. Download the project
+2. Create GitHub repository and push code
+3. Connect GitHub repo to Netlify
+4. Add SESSION_SECRET environment variable in Netlify dashboard
+5. Deploy!
+
+See **NETLIFY_DEPLOY_STEPS.md** for detailed instructions with screenshots.
 
 ### Next Steps (Post-Launch)
 1. Deploy to Netlify (see NETLIFY_DEPLOYMENT.md)

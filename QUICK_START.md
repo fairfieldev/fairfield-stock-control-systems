@@ -57,40 +57,31 @@ All accounts use password: **`Password123`**
 └── NETLIFY_DEPLOYMENT.md # Full Netlify deployment guide
 ```
 
-## Deploy to Netlify (No Git Required)
+## Deploy to Netlify
 
-### Option 1: Direct Upload
-1. Run `npm run build` locally
-2. Go to https://netlify.com/drop
-3. Drag & drop the entire `dist` folder
-4. Set environment variables (SESSION_SECRET required)
-5. Your app is live!
+See **NETLIFY_DEPLOY_STEPS.md** for complete step-by-step instructions.
 
-### Option 2: Git-free Deployment
-1. Go to https://netlify.com
-2. Click "Add new site" → "Deploy manually"
-3. Drag & drop your entire project folder
-4. Netlify will run: `npm run build` → `npm start`
-5. Set environment variables
-6. Your app is live!
+Quick overview:
+1. Push to GitHub using git
+2. Connect your GitHub repo to Netlify
+3. Add SESSION_SECRET environment variable
+4. Deploy!
 
-## Required Environment Variables
-
-Create a `.env` file in the root directory:
-
+**Your Session Secret** (keep it safe):
 ```
-SESSION_SECRET=your-random-secret-here
+38ca0962f6b4dbe6ba307f31af8c08dff568fb0ca7f6cdacd75871e84c4ae3b5
 ```
 
-Optional (for Firebase features):
+**Full instructions**: See NETLIFY_DEPLOY_STEPS.md
+
+## Your Session Secret
+
+Use this in Netlify environment variables:
 ```
-VITE_FIREBASE_API_KEY=your_key
-VITE_FIREBASE_PROJECT_ID=your_project
-VITE_FIREBASE_AUTH_DOMAIN=your_domain
-VITE_FIREBASE_STORAGE_BUCKET=your_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_id
-VITE_FIREBASE_APP_ID=your_app_id
+38ca0962f6b4dbe6ba307f31af8c08dff568fb0ca7f6cdacd75871e84c4ae3b5
 ```
+
+See **NETLIFY_DEPLOY_STEPS.md** for complete setup instructions including where to add this secret.
 
 ## Troubleshooting
 

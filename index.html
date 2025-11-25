@@ -274,24 +274,22 @@
         </div>
 
         <div class="section">
-            <h2>🌐 Deploy to Netlify (Without Git)</h2>
+            <h2>🌐 Deploy to Netlify</h2>
+            <p style="color: #666; font-size: 13px; margin-bottom: 15px;"><strong>See <code>NETLIFY_DEPLOY_STEPS.md</code> for complete step-by-step instructions</strong></p>
             <ol class="steps">
-                <li><strong>Run locally first:</strong> npm install && npm run build</li>
-                <li><strong>Drag & drop the `dist` folder</strong> to Netlify.com</li>
-                <li><strong>Set environment variables:</strong> SESSION_SECRET (required) + Firebase vars (optional)</li>
-                <li><strong>Deploy!</strong> Your app is live</li>
+                <li><strong>Create GitHub repo</strong> and push your project (git)</li>
+                <li><strong>Connect to Netlify</strong> via Import existing project</li>
+                <li><strong>Add SESSION_SECRET</strong> environment variable (provided below)</li>
+                <li><strong>Deploy!</strong> Netlify builds and deploys automatically</li>
             </ol>
         </div>
 
         <div class="section">
-            <h2>📋 Environment Variables</h2>
-            <p style="color: #666; font-size: 13px; margin-bottom: 10px;">Create a <code>.env</code> file in the root directory:</p>
-            <div class="code-block">SESSION_SECRET=your-random-secret-key
-
-# Optional: Firebase integration
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_AUTH_DOMAIN=your_domain
-VITE_FIREBASE_STORAGE_BUCKET=your_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+            <h2>🔐 Your Session Secret Key</h2>
+            <div class="code-block" style="background: #1e1e1e; color: #4DFF4D; padding: 20px; text-align: center; font-size: 14px; word-break: break-all;">
+38ca0962f6b4dbe6ba307f31af8c08dff568fb0ca7f6cdacd75871e84c4ae3b5
+            </div>
+            <p style="color: #666; font-size: 13px; margin-top: 10px;">
+                ⚠️ <strong>Important:</strong> Add this as <code>SESSION_SECRET</code> in Netlify environment variables (Build & Deploy → Environment)
+            </p>
+        </div>
