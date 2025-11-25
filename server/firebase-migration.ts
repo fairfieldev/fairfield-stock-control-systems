@@ -1,35 +1,15 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { storage } from "./storage";
 
-// Load Firebase config from environment variables
-function getFirebaseConfig() {
-  return {
-    apiKey: process.env.VITE_FIREBASE_API_KEY,
-    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.VITE_FIREBASE_APP_ID,
-  };
-}
-
-let firebaseApp: any;
-let db: any;
-
-function initializeFirebase() {
-  if (!firebaseApp) {
-    const config = getFirebaseConfig();
-    
-    // Validate that we have the minimum required config
-    if (!config.apiKey || !config.projectId) {
-      throw new Error("Firebase configuration is incomplete. Please set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID environment variables.");
-    }
-    
-    firebaseApp = initializeApp(config);
-    db = getFirestore(firebaseApp);
+// Use Firestore REST API
+async function firestoreQuery(projectId: string, apiKey: string, collection: string) {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}`;
+  const response = await fetch(`${url}?key=${apiKey}`);
+  
+  if (!response.ok) {
+    throw new Error(`Firestore query failed: ${response.statusText}`);
   }
-  return db;
+  
+  return response.json();
 }
 
 export async function migrateFirebaseData(): Promise<{
@@ -38,7 +18,12 @@ export async function migrateFirebaseData(): Promise<{
   transfersCount: number;
   usersCount: number;
 }> {
-  const db = initializeFirebase();
+  const apiKey = process.env.VITE_FIREBASE_API_KEY;
+  const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+  
+  if (!apiKey || !projectId) {
+    throw new Error("Firebase API Key and Project ID are required");
+  }
   
   let productsCount = 0;
   let locationsCount = 0;
@@ -47,111 +32,137 @@ export async function migrateFirebaseData(): Promise<{
 
   try {
     // Migrate Products (with deduplication)
-    const productsSnapshot = await getDocs(collection(db, "products"));
+    const productsData = await firestoreQuery(projectId, apiKey, "products");
     const existingProducts = await storage.getAllProducts();
     const existingCodes = new Set(existingProducts.map(p => p.code));
     
-    for (const doc of productsSnapshot.docs) {
-      const data = doc.data();
-      const productCode = data.code || doc.id;
-      
-      // Skip if already exists
-      if (existingCodes.has(productCode)) {
-        console.log(`Skipping duplicate product: ${productCode}`);
-        continue;
-      }
-      
-      try {
-        await storage.createProduct({
-          code: productCode,
-          name: data.name || data.productName || "Unknown Product",
-          category: data.category || "General",
-          unit: data.unit || "pieces",
-        });
-        productsCount++;
-      } catch (error) {
-        console.error(`Error migrating product ${doc.id}:`, error);
+    if (productsData.documents) {
+      for (const doc of productsData.documents) {
+        const fields = doc.fields || {};
+        const productCode = fields.code?.stringValue || fields.code?.mapValue?.fields?.stringValue || doc.name.split('/').pop();
+        
+        // Skip if already exists
+        if (existingCodes.has(productCode)) {
+          console.log(`Skipping duplicate product: ${productCode}`);
+          continue;
+        }
+        
+        try {
+          const name = fields.name?.stringValue || fields.productName?.stringValue || "Unknown Product";
+          const category = fields.category?.stringValue || "General";
+          const unit = fields.unit?.stringValue || "pieces";
+          
+          await storage.createProduct({
+            code: productCode,
+            name,
+            category,
+            unit,
+          });
+          productsCount++;
+        } catch (error) {
+          console.error(`Error migrating product:`, error);
+        }
       }
     }
 
     // Migrate Locations (with deduplication)
-    const locationsSnapshot = await getDocs(collection(db, "locations"));
+    const locationsData = await firestoreQuery(projectId, apiKey, "locations");
     const existingLocations = await storage.getAllLocations();
     const existingLocationNames = new Set(existingLocations.map(l => l.name));
     
-    for (const doc of locationsSnapshot.docs) {
-      const data = doc.data();
-      const locationName = data.name || doc.id;
-      
-      // Skip if already exists
-      if (existingLocationNames.has(locationName)) {
-        console.log(`Skipping duplicate location: ${locationName}`);
-        continue;
-      }
-      
-      try {
-        await storage.createLocation({
-          name: locationName,
-          address: data.address || "",
-        });
-        locationsCount++;
-      } catch (error) {
-        console.error(`Error migrating location ${doc.id}:`, error);
+    if (locationsData.documents) {
+      for (const doc of locationsData.documents) {
+        const fields = doc.fields || {};
+        const locationName = fields.name?.stringValue || doc.name.split('/').pop();
+        
+        // Skip if already exists
+        if (existingLocationNames.has(locationName)) {
+          console.log(`Skipping duplicate location: ${locationName}`);
+          continue;
+        }
+        
+        try {
+          const address = fields.address?.stringValue || "";
+          
+          await storage.createLocation({
+            name: locationName,
+            address,
+          });
+          locationsCount++;
+        } catch (error) {
+          console.error(`Error migrating location:`, error);
+        }
       }
     }
 
-    // Migrate Transfers (idempotent - always import, storage handles deduplication)
-    const transfersSnapshot = await getDocs(collection(db, "transfers"));
-    for (const doc of transfersSnapshot.docs) {
-      const data = doc.data();
-      try {
-        await storage.createTransfer({
-          fromLocationId: data.fromLocationId || data.fromLocation || "unknown",
-          toLocationId: data.toLocationId || data.toLocation || "unknown",
-          driverName: data.driverName || data.driver || "Unknown Driver",
-          vehicleReg: data.vehicleReg || data.vehicle || "N/A",
-          status: data.status || "pending",
-          items: data.items || data.products || [],
-          createdBy: data.createdBy || "migration",
-          dispatchedBy: data.dispatchedBy,
-          dispatchedAt: data.dispatchedAt ? new Date(data.dispatchedAt.seconds * 1000) : undefined,
-          receivedBy: data.receivedBy,
-          receivedAt: data.receivedAt ? new Date(data.receivedAt.seconds * 1000) : undefined,
-          shortages: data.shortages || [],
-          damages: data.damages || [],
-        });
-        transfersCount++;
-      } catch (error) {
-        console.error(`Error migrating transfer ${doc.id}:`, error);
+    // Migrate Transfers
+    const transfersData = await firestoreQuery(projectId, apiKey, "transfers");
+    
+    if (transfersData.documents) {
+      for (const doc of transfersData.documents) {
+        const fields = doc.fields || {};
+        
+        try {
+          const items = fields.items?.arrayValue?.values?.map((v: any) => ({
+            productId: v.mapValue?.fields?.productId?.stringValue || "",
+            productCode: v.mapValue?.fields?.productCode?.stringValue || "",
+            productName: v.mapValue?.fields?.productName?.stringValue || "",
+            quantity: parseInt(v.mapValue?.fields?.quantity?.integerValue || "0"),
+            unit: v.mapValue?.fields?.unit?.stringValue || "",
+          })) || [];
+          
+          await storage.createTransfer({
+            fromLocationId: fields.fromLocationId?.stringValue || fields.fromLocation?.stringValue || "unknown",
+            toLocationId: fields.toLocationId?.stringValue || fields.toLocation?.stringValue || "unknown",
+            driverName: fields.driverName?.stringValue || fields.driver?.stringValue || "Unknown Driver",
+            vehicleReg: fields.vehicleReg?.stringValue || fields.vehicle?.stringValue || "N/A",
+            status: fields.status?.stringValue || "pending",
+            items,
+            createdBy: fields.createdBy?.stringValue || "migration",
+            dispatchedBy: fields.dispatchedBy?.stringValue,
+            dispatchedAt: fields.dispatchedAt?.timestampValue ? new Date(fields.dispatchedAt.timestampValue) : undefined,
+            receivedBy: fields.receivedBy?.stringValue,
+            receivedAt: fields.receivedAt?.timestampValue ? new Date(fields.receivedAt.timestampValue) : undefined,
+            shortages: fields.shortages?.arrayValue?.values?.map((v: any) => v.stringValue || "") || [],
+            damages: fields.damages?.arrayValue?.values?.map((v: any) => v.stringValue || "") || [],
+          });
+          transfersCount++;
+        } catch (error) {
+          console.error(`Error migrating transfer:`, error);
+        }
       }
     }
 
     // Migrate Users (with deduplication by email)
-    const usersSnapshot = await getDocs(collection(db, "users"));
+    const usersData = await firestoreQuery(projectId, apiKey, "users");
     const existingUsers = await storage.getAllUsers();
     const existingEmails = new Set(existingUsers.map(u => u.email));
     
-    for (const doc of usersSnapshot.docs) {
-      const data = doc.data();
-      const userEmail = data.email || `${doc.id}@fairfield.com`;
-      
-      // Skip if already exists
-      if (existingEmails.has(userEmail)) {
-        console.log(`Skipping duplicate user: ${userEmail}`);
-        continue;
-      }
-      
-      try {
-        await storage.createUser({
-          email: userEmail,
-          name: data.name || data.displayName || doc.id,
-          role: data.role || "view_only",
-          permissions: data.permissions || [],
-          active: data.active !== false,
-        });
-        usersCount++;
-      } catch (error) {
-        console.error(`Error migrating user ${doc.id}:`, error);
+    if (usersData.documents) {
+      for (const doc of usersData.documents) {
+        const fields = doc.fields || {};
+        const userEmail = fields.email?.stringValue || `${doc.name.split('/').pop()}@fairfield.com`;
+        
+        // Skip if already exists
+        if (existingEmails.has(userEmail)) {
+          console.log(`Skipping duplicate user: ${userEmail}`);
+          continue;
+        }
+        
+        try {
+          const permissions = fields.permissions?.arrayValue?.values?.map((v: any) => v.stringValue || "") || [];
+          
+          await storage.createUser({
+            email: userEmail,
+            name: fields.name?.stringValue || fields.displayName?.stringValue || doc.name.split('/').pop(),
+            role: fields.role?.stringValue || "view_only",
+            permissions,
+            active: fields.active?.booleanValue !== false,
+          });
+          usersCount++;
+        } catch (error) {
+          console.error(`Error migrating user:`, error);
+        }
       }
     }
 
