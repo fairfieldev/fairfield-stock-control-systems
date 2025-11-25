@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Mail, CheckCircle2, XCircle, Send, Database, AlertCircle } from "lucide-react";
+import { Mail, CheckCircle2, XCircle, Send, Database, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { EmailSettings } from "@shared/schema";
@@ -31,9 +31,15 @@ export default function IntegrationSettings() {
   });
   const [isTesting, setIsTesting] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const { data: settings, isLoading } = useQuery<EmailSettings>({
     queryKey: ["/api/email-settings"],
+  });
+
+  const { data: systemSettings } = useQuery<{ logoUrl?: string | null }>({
+    queryKey: ["/api/system-settings"],
   });
 
   const saveMutation = useMutation({
@@ -92,7 +98,7 @@ export default function IntegrationSettings() {
   const handleMigrateData = async () => {
     try {
       setIsMigrating(true);
-      const response = await apiRequest("POST", "/api/migrate-firebase-data");
+      const response = await apiRequest("POST", "/api/migrate-firebase-data") as any;
       toast({
         title: "Migration successful!",
         description: `Migrated ${response.stats.productsCount} products, ${response.stats.locationsCount} locations, ${response.stats.transfersCount} transfers, and ${response.stats.usersCount} users.`,
@@ -105,6 +111,32 @@ export default function IntegrationSettings() {
       });
     } finally {
       setIsMigrating(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingLogo(true);
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const dataUrl = event.target?.result as string;
+        await apiRequest("POST", "/api/system-settings", { logoUrl: dataUrl });
+        setLogoUrl(dataUrl);
+        toast({ title: "Logo uploaded successfully!" });
+        queryClient.invalidateQueries({ queryKey: ["/api/system-settings"] });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Could not upload logo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingLogo(false);
     }
   };
 
@@ -277,6 +309,50 @@ export default function IntegrationSettings() {
               )}
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Logo Settings
+              </CardTitle>
+              <CardDescription>
+                Upload a custom logo to display on login and top of the app
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {systemSettings?.logoUrl && (
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <p className="text-sm font-medium mb-2">Current Logo:</p>
+              <img 
+                src={systemSettings.logoUrl} 
+                alt="Current Logo" 
+                className="h-16 w-auto object-contain"
+                data-testid="preview-logo"
+              />
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="logo-upload">Upload Logo</Label>
+            <Input
+              id="logo-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              disabled={isUploadingLogo}
+              data-testid="input-logo-upload"
+            />
+            <p className="text-xs text-muted-foreground">
+              Recommended: PNG or JPG, max 1MB, square or landscape format works best
+            </p>
+          </div>
         </CardContent>
       </Card>
 

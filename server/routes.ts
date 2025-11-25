@@ -306,6 +306,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // System Settings (Logo, etc.)
+  app.get("/api/system-settings", async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings || {});
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch system settings" });
+    }
+  });
+
+  app.post("/api/system-settings", async (req, res) => {
+    try {
+      const data = req.body;
+      const settings = await storage.saveSystemSettings(data);
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save system settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

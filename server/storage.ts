@@ -9,6 +9,8 @@ import {
   type InsertTransfer,
   type EmailSettings,
   type InsertEmailSettings,
+  type SystemSettings,
+  type InsertSystemSettings,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -52,6 +54,10 @@ export interface IStorage {
   // Email Settings
   getEmailSettings(): Promise<EmailSettings | undefined>;
   saveEmailSettings(settings: InsertEmailSettings): Promise<EmailSettings>;
+
+  // System Settings (Logo, etc)
+  getSystemSettings(): Promise<SystemSettings | undefined>;
+  saveSystemSettings(settings: InsertSystemSettings): Promise<SystemSettings>;
 }
 
 export class MemStorage implements IStorage {
@@ -60,6 +66,7 @@ export class MemStorage implements IStorage {
   private locations: Map<string, Location>;
   private transfers: Map<string, Transfer>;
   private emailSettings: EmailSettings | undefined;
+  private systemSettings: SystemSettings | undefined;
 
   constructor() {
     this.users = new Map();
@@ -298,10 +305,32 @@ export class MemStorage implements IStorage {
     this.emailSettings = {
       ...settings,
       id: "default",
+      provider: settings.provider || null,
+      senderEmail: settings.senderEmail || null,
+      smtpHost: settings.smtpHost || null,
+      smtpPort: settings.smtpPort || null,
+      smtpUsername: settings.smtpUsername || null,
+      smtpPassword: settings.smtpPassword || null,
+      apiKey: settings.apiKey || null,
       configured: true,
       updatedAt: new Date(),
     };
     return this.emailSettings;
+  }
+
+  // System Settings
+  async getSystemSettings(): Promise<SystemSettings | undefined> {
+    return this.systemSettings;
+  }
+
+  async saveSystemSettings(settings: InsertSystemSettings): Promise<SystemSettings> {
+    this.systemSettings = {
+      ...settings,
+      id: "default",
+      logoUrl: settings.logoUrl || null,
+      updatedAt: new Date(),
+    };
+    return this.systemSettings;
   }
 }
 

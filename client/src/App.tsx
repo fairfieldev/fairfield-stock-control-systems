@@ -29,6 +29,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
@@ -42,6 +43,19 @@ import IntegrationSettings from "@/pages/integration-settings";
 function AppSidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch logo from system settings
+    fetch("/api/system-settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data.logoUrl) {
+          setLogoUrl(data.logoUrl);
+        }
+      })
+      .catch(err => console.error("Failed to fetch logo:", err));
+  }, []);
 
   const hasPermission = (tabId: string) => {
     if (!user) return false;
@@ -68,9 +82,21 @@ function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-bold px-4 py-4">
-            Fairfield Stock Control
-          </SidebarGroupLabel>
+          <div className="px-4 py-4">
+            {logoUrl && (
+              <div className="mb-3 flex justify-center">
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  className="h-12 w-auto object-contain"
+                  data-testid="logo-sidebar"
+                />
+              </div>
+            )}
+            <SidebarGroupLabel className="text-lg font-bold">
+              Fairfield Stock Control
+            </SidebarGroupLabel>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleItems.map((item) => {
