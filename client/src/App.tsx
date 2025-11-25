@@ -38,6 +38,7 @@ import NewTransfer from "@/pages/transfers-new";
 import TransfersDispatch from "@/pages/transfers-dispatch";
 import TransfersReceive from "@/pages/transfers-receive";
 import Transfers from "@/pages/transfers";
+import Reports from "@/pages/reports";
 import UserManagement from "@/pages/user-management";
 import IntegrationSettings from "@/pages/integration-settings";
 
@@ -167,6 +168,7 @@ function AuthenticatedApp() {
             {hasPermission("dispatch") && <Route path="/transfers/dispatch" component={TransfersDispatch} />}
             {hasPermission("receive") && <Route path="/transfers/receive" component={TransfersReceive} />}
             {hasPermission("all-transfers") && <Route path="/transfers" component={Transfers} />}
+            {hasPermission("reports") && <Route path="/reports" component={Reports} />}
             {hasPermission("users") && <Route path="/users" component={UserManagement} />}
             {hasPermission("integration") && <Route path="/integration" component={IntegrationSettings} />}
             <Route>

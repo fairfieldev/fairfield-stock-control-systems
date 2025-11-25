@@ -43,16 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // Trigger Firebase sync on login
-      try {
-        await fetch("/api/migrate-firebase-data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-      } catch (error) {
-        // Sync is optional - don't fail login if it fails
-        console.error("Firebase sync on login failed:", error);
-      }
+      // Trigger Firebase sync on login (silently in background)
+      fetch("/api/migrate-firebase-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).catch((error) => {
+        // Silently log - migration is optional and shouldn't fail the user experience
+        console.debug("Firebase background sync:", error);
+      });
     } catch (error) {
       throw error;
     }
