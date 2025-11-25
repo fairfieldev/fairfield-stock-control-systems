@@ -7,14 +7,40 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Helper function to get user role from localStorage
+function getUserRole(): string | null {
+  try {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.role || null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers: Record<string, string> = {};
+  
+  // Add user role header for permission checks
+  const userRole = getUserRole();
+  if (userRole) {
+    headers["x-user-role"] = userRole;
+  }
+  
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,7 +55,16 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const headers: Record<string, string> = {};
+    
+    // Add user role header for permission checks
+    const userRole = getUserRole();
+    if (userRole) {
+      headers["x-user-role"] = userRole;
+    }
+
     const res = await fetch(queryKey.join("/") as string, {
+      headers,
       credentials: "include",
     });
 

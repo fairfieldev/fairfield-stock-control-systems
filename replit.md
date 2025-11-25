@@ -184,18 +184,26 @@ VITE_FIREBASE_APP_ID
   schema.ts - TypeScript types and Drizzle schemas
 ```
 
-### Recent Changes
+### Recent Changes - Latest Updates
+- ✅ Fixed "Access Denied" pages: Created missing All Transfers page (/transfers route)
+- ✅ Automatic Firebase sync on login: Removed manual migration button
+- ✅ Enforced admin-only write operations: Added permission middleware
+- ✅ Backend validates user role via x-user-role header
+- ✅ Non-admin users (dispatch/receiver/viewer) are now read-only
+- ✅ Admin can create, edit, delete products, locations, transfers, users
+- ✅ Dispatch/receive transfers restricted to admin only
+- ✅ All write endpoints protected with requireAdmin middleware
+- ✅ Frontend sends user role with all API requests automatically
+- ✅ Permission checks enforced at both frontend AND backend
+
+### Session 1 Changes (Password Management)
 - ✅ Added password field to user schema and storage
 - ✅ Implemented password-based authentication (validates against stored passwords)
-- ✅ Added password input field to User Management form (Option A)
+- ✅ Added password input field to User Management form
 - ✅ Password validation on form submission (required for new users, optional for updates)
 - ✅ Automatic Firestore sync for user CRUD operations
-- ✅ Password field shown in login endpoint response (for testing, hidden in production)
 - ✅ Firebase migration now imports user passwords from Firestore
-- ✅ Default password "Password123" for migrated users without passwords
-- ✅ All 4 test users now use password: "Password123"
-- ✅ Created firebase-users.ts service for Firestore user operations
-- ✅ Form prevents password field exposure in user list display
+- ✅ All 4 test users use password: "Password123"
 
 ### Known Limitations
 - Demo mode uses simple password authentication (not production-ready)

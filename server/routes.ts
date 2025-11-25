@@ -1,9 +1,19 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { sendOrderFulfillmentEmail } from "./email-service";
 import { migrateFirebaseData } from "./firebase-migration";
 import type { InsertProduct, InsertLocation, InsertTransfer, InsertUser, InsertEmailSettings } from "@shared/schema";
+
+// Helper function to check if request is from admin
+// For now, we check the user-role header sent by the frontend
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const userRole = req.headers["x-user-role"] as string;
+  if (userRole !== "admin") {
+    return res.status(403).json({ error: "Only administrators can perform this action" });
+  }
+  next();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication
@@ -39,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", async (req, res) => {
+  app.post("/api/products", requireAdmin, async (req, res) => {
     try {
       const data: InsertProduct = req.body;
       const product = await storage.createProduct(data);
@@ -49,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/products/:id", async (req, res) => {
+  app.patch("/api/products/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const data = req.body;
@@ -60,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/products/:id", async (req, res) => {
+  app.delete("/api/products/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteProduct(id);
@@ -80,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/locations", async (req, res) => {
+  app.post("/api/locations", requireAdmin, async (req, res) => {
     try {
       const data: InsertLocation = req.body;
       const location = await storage.createLocation(data);
@@ -90,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/locations/:id", async (req, res) => {
+  app.patch("/api/locations/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const data = req.body;
@@ -101,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/locations/:id", async (req, res) => {
+  app.delete("/api/locations/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteLocation(id);
@@ -121,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transfers", async (req, res) => {
+  app.post("/api/transfers", requireAdmin, async (req, res) => {
     try {
       const data: InsertTransfer = req.body;
       const transfer = await storage.createTransfer(data);
@@ -131,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/transfers/:id/dispatch", async (req, res) => {
+  app.patch("/api/transfers/:id/dispatch", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const transfer = await storage.dispatchTransfer(id, "current-user"); // Will be replaced with actual user
@@ -141,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/transfers/:id/receive", async (req, res) => {
+  app.patch("/api/transfers/:id/receive", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const { shortages, damages } = req.body;
@@ -187,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+  app.post("/api/users", requireAdmin, async (req, res) => {
     try {
       const data: InsertUser = req.body;
       const user = await storage.createUser(data);
@@ -197,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/users/:id", async (req, res) => {
+  app.patch("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const data = req.body;
@@ -208,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id", async (req, res) => {
+  app.delete("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteUser(id);
@@ -228,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/email-settings", async (req, res) => {
+  app.post("/api/email-settings", requireAdmin, async (req, res) => {
     try {
       const data: InsertEmailSettings = req.body;
       
@@ -317,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/system-settings", async (req, res) => {
+  app.post("/api/system-settings", requireAdmin, async (req, res) => {
     try {
       const data = req.body;
       const settings = await storage.saveSystemSettings(data);

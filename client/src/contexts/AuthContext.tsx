@@ -42,6 +42,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await response.json();
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
+
+      // Trigger Firebase sync on login
+      try {
+        await fetch("/api/migrate-firebase-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        // Sync is optional - don't fail login if it fails
+        console.error("Firebase sync on login failed:", error);
+      }
     } catch (error) {
       throw error;
     }
