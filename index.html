@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fairfield Stock Control System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #444;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .steps {
+            list-style: none;
+        }
+
+        .steps li {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .steps li strong {
+            color: #667eea;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            overflow-x: auto;
+            border: 1px solid #333;
+        }
+
+        .credentials {
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .credentials h3 {
+            color: #1e40af;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .credential-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .credential-row code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .button-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .button-secondary:hover {
+            background: #e5e5e5;
+        }
+
+        .alert {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #92400e;
+            font-size: 13px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .feature {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .feature strong {
+            color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button {
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Fairfield Stock Control System</h1>
+        <p class="subtitle">Download and Deploy Ready</p>
+
+        <div class="section">
+            <h2>🚀 Quick Start</h2>
+            <ol class="steps">
+                <li><strong>Extract</strong> this project folder</li>
+                <li><strong>Install</strong> dependencies: <code>npm install</code></li>
+                <li><strong>Build</strong> the app: <code>npm run build</code></li>
+                <li><strong>Start</strong> the server: <code>npm start</code></li>
+                <li><strong>Open</strong> browser: http://localhost:3000</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>🔑 Test Credentials</h2>
+            <p style="color: #666; margin-bottom: 10px; font-size: 13px;">Password for all accounts: <code>Password123</code></p>
+            <div class="credentials">
+                <h3>Admin Account (Full Access)</h3>
+                <div class="credential-row">
+                    <span>Email:</span>
+                    <code>admin@fairfield.com</code>
+                </div>
+                <hr style="border: none; border-top: 1px solid #bfdbfe; margin: 8px 0;">
+                <h3 style="margin-top: 10px;">Other Test Accounts</h3>
+                <div class="credential-row">
+                    <span>Dispatch:</span>
+                    <code>dispatch@fairfield.com</code>
+                </div>
+                <div class="credential-row">
+                    <span>Receiver:</span>
+                    <code>receiver@fairfield.com</code>
+                </div>
+                <div class="credential-row">
+                    <span>View Only:</span>
+                    <code>viewer@fairfield.com</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✨ Features Included</h2>
+            <div class="features">
+                <div class="feature"><strong>✓</strong> Professional UI</div>
+                <div class="feature"><strong>✓</strong> Dark Mode</div>
+                <div class="feature"><strong>✓</strong> Role-Based Access</div>
+                <div class="feature"><strong>✓</strong> Product Management</div>
+                <div class="feature"><strong>✓</strong> Location Tracking</div>
+                <div class="feature"><strong>✓</strong> Transfer Orders</div>
+                <div class="feature"><strong>✓</strong> QR Barcodes</div>
+                <div class="feature"><strong>✓</strong> Print Reports</div>
+                <div class="feature"><strong>✓</strong> Email Notifications</div>
+                <div class="feature"><strong>✓</strong> Firebase Sync</div>
+                <div class="feature"><strong>✓</strong> User Management</div>
+                <div class="feature"><strong>✓</strong> Analytics Dashboard</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌐 Deploy to Netlify (Without Git)</h2>
+            <ol class="steps">
+                <li><strong>Run locally first:</strong> npm install && npm run build</li>
+                <li><strong>Drag & drop the `dist` folder</strong> to Netlify.com</li>
+                <li><strong>Set environment variables:</strong> SESSION_SECRET (required) + Firebase vars (optional)</li>
+                <li><strong>Deploy!</strong> Your app is live</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>📋 Environment Variables</h2>
+            <p style="color: #666; font-size: 13px; margin-bottom: 10px;">Create a <code>.env</code> file in the root directory:</p>
+            <div class="code-block">SESSION_SECRET=your-random-secret-key
+
+# Optional: Firebase integration
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_AUTH_DOMAIN=your_domain
+VITE_FIREBASE_STORAGE_BUCKET=your_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
