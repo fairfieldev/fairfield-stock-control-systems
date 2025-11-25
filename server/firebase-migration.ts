@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, get } from "firebase/database";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { storage } from "./storage";
 
 // Load Firebase config from environment variables
@@ -7,7 +7,6 @@ function getFirebaseConfig() {
   return {
     apiKey: process.env.VITE_FIREBASE_API_KEY,
     authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-    databaseURL: process.env.VITE_FIREBASE_DATABASE_URL,
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -28,7 +27,7 @@ function initializeFirebase() {
     }
     
     firebaseApp = initializeApp(config);
-    db = getDatabase(firebaseApp);
+    db = getFirestore(firebaseApp);
   }
   return db;
 }
@@ -48,128 +47,111 @@ export async function migrateFirebaseData(): Promise<{
 
   try {
     // Migrate Products (with deduplication)
-    const productsRef = ref(db, "products");
-    const productsSnapshot = await get(productsRef);
+    const productsSnapshot = await getDocs(collection(db, "products"));
     const existingProducts = await storage.getAllProducts();
     const existingCodes = new Set(existingProducts.map(p => p.code));
     
-    if (productsSnapshot.exists()) {
-      const productsData = productsSnapshot.val();
-      for (const [key, data] of Object.entries(productsData)) {
-        const productData = data as any;
-        const productCode = productData.code || key;
-        
-        // Skip if already exists
-        if (existingCodes.has(productCode)) {
-          console.log(`Skipping duplicate product: ${productCode}`);
-          continue;
-        }
-        
-        try {
-          await storage.createProduct({
-            code: productCode,
-            name: productData.name || productData.productName || "Unknown Product",
-            category: productData.category || "General",
-            unit: productData.unit || "pieces",
-          });
-          productsCount++;
-        } catch (error) {
-          console.error(`Error migrating product ${key}:`, error);
-        }
+    for (const doc of productsSnapshot.docs) {
+      const data = doc.data();
+      const productCode = data.code || doc.id;
+      
+      // Skip if already exists
+      if (existingCodes.has(productCode)) {
+        console.log(`Skipping duplicate product: ${productCode}`);
+        continue;
+      }
+      
+      try {
+        await storage.createProduct({
+          code: productCode,
+          name: data.name || data.productName || "Unknown Product",
+          category: data.category || "General",
+          unit: data.unit || "pieces",
+        });
+        productsCount++;
+      } catch (error) {
+        console.error(`Error migrating product ${doc.id}:`, error);
       }
     }
 
     // Migrate Locations (with deduplication)
-    const locationsRef = ref(db, "locations");
-    const locationsSnapshot = await get(locationsRef);
+    const locationsSnapshot = await getDocs(collection(db, "locations"));
     const existingLocations = await storage.getAllLocations();
     const existingLocationNames = new Set(existingLocations.map(l => l.name));
     
-    if (locationsSnapshot.exists()) {
-      const locationsData = locationsSnapshot.val();
-      for (const [key, data] of Object.entries(locationsData)) {
-        const locationData = data as any;
-        const locationName = locationData.name || key;
-        
-        // Skip if already exists
-        if (existingLocationNames.has(locationName)) {
-          console.log(`Skipping duplicate location: ${locationName}`);
-          continue;
-        }
-        
-        try {
-          await storage.createLocation({
-            name: locationName,
-            address: locationData.address || "",
-          });
-          locationsCount++;
-        } catch (error) {
-          console.error(`Error migrating location ${key}:`, error);
-        }
+    for (const doc of locationsSnapshot.docs) {
+      const data = doc.data();
+      const locationName = data.name || doc.id;
+      
+      // Skip if already exists
+      if (existingLocationNames.has(locationName)) {
+        console.log(`Skipping duplicate location: ${locationName}`);
+        continue;
+      }
+      
+      try {
+        await storage.createLocation({
+          name: locationName,
+          address: data.address || "",
+        });
+        locationsCount++;
+      } catch (error) {
+        console.error(`Error migrating location ${doc.id}:`, error);
       }
     }
 
     // Migrate Transfers (idempotent - always import, storage handles deduplication)
-    const transfersRef = ref(db, "transfers");
-    const transfersSnapshot = await get(transfersRef);
-    
-    if (transfersSnapshot.exists()) {
-      const transfersData = transfersSnapshot.val();
-      for (const [key, data] of Object.entries(transfersData)) {
-        const transferData = data as any;
-        try {
-          await storage.createTransfer({
-            fromLocationId: transferData.fromLocationId || transferData.fromLocation || "unknown",
-            toLocationId: transferData.toLocationId || transferData.toLocation || "unknown",
-            driverName: transferData.driverName || transferData.driver || "Unknown Driver",
-            vehicleReg: transferData.vehicleReg || transferData.vehicle || "N/A",
-            status: transferData.status || "pending",
-            items: transferData.items || transferData.products || [],
-            createdBy: transferData.createdBy || "migration",
-            dispatchedBy: transferData.dispatchedBy,
-            dispatchedAt: transferData.dispatchedAt ? new Date(transferData.dispatchedAt.seconds * 1000) : undefined,
-            receivedBy: transferData.receivedBy,
-            receivedAt: transferData.receivedAt ? new Date(transferData.receivedAt.seconds * 1000) : undefined,
-            shortages: transferData.shortages || [],
-            damages: transferData.damages || [],
-          });
-          transfersCount++;
-        } catch (error) {
-          console.error(`Error migrating transfer ${key}:`, error);
-        }
+    const transfersSnapshot = await getDocs(collection(db, "transfers"));
+    for (const doc of transfersSnapshot.docs) {
+      const data = doc.data();
+      try {
+        await storage.createTransfer({
+          fromLocationId: data.fromLocationId || data.fromLocation || "unknown",
+          toLocationId: data.toLocationId || data.toLocation || "unknown",
+          driverName: data.driverName || data.driver || "Unknown Driver",
+          vehicleReg: data.vehicleReg || data.vehicle || "N/A",
+          status: data.status || "pending",
+          items: data.items || data.products || [],
+          createdBy: data.createdBy || "migration",
+          dispatchedBy: data.dispatchedBy,
+          dispatchedAt: data.dispatchedAt ? new Date(data.dispatchedAt.seconds * 1000) : undefined,
+          receivedBy: data.receivedBy,
+          receivedAt: data.receivedAt ? new Date(data.receivedAt.seconds * 1000) : undefined,
+          shortages: data.shortages || [],
+          damages: data.damages || [],
+        });
+        transfersCount++;
+      } catch (error) {
+        console.error(`Error migrating transfer ${doc.id}:`, error);
       }
     }
 
     // Migrate Users (with deduplication by email)
-    const usersRef = ref(db, "users");
-    const usersSnapshot = await get(usersRef);
+    const usersSnapshot = await getDocs(collection(db, "users"));
     const existingUsers = await storage.getAllUsers();
     const existingEmails = new Set(existingUsers.map(u => u.email));
     
-    if (usersSnapshot.exists()) {
-      const usersData = usersSnapshot.val();
-      for (const [key, data] of Object.entries(usersData)) {
-        const userData = data as any;
-        const userEmail = userData.email || `${key}@fairfield.com`;
-        
-        // Skip if already exists
-        if (existingEmails.has(userEmail)) {
-          console.log(`Skipping duplicate user: ${userEmail}`);
-          continue;
-        }
-        
-        try {
-          await storage.createUser({
-            email: userEmail,
-            name: userData.name || userData.displayName || key,
-            role: userData.role || "view_only",
-            permissions: userData.permissions || [],
-            active: userData.active !== false,
-          });
-          usersCount++;
-        } catch (error) {
-          console.error(`Error migrating user ${key}:`, error);
-        }
+    for (const doc of usersSnapshot.docs) {
+      const data = doc.data();
+      const userEmail = data.email || `${doc.id}@fairfield.com`;
+      
+      // Skip if already exists
+      if (existingEmails.has(userEmail)) {
+        console.log(`Skipping duplicate user: ${userEmail}`);
+        continue;
+      }
+      
+      try {
+        await storage.createUser({
+          email: userEmail,
+          name: data.name || data.displayName || doc.id,
+          role: data.role || "view_only",
+          permissions: data.permissions || [],
+          active: data.active !== false,
+        });
+        usersCount++;
+      } catch (error) {
+        console.error(`Error migrating user ${doc.id}:`, error);
       }
     }
 
