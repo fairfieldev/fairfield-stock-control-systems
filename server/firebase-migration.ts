@@ -17,6 +17,7 @@ export async function migrateFirebaseData(): Promise<{
   locationsCount: number;
   transfersCount: number;
   usersCount: number;
+  logosCount?: number;
 }> {
   const apiKey = process.env.VITE_FIREBASE_API_KEY;
   const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
@@ -29,8 +30,26 @@ export async function migrateFirebaseData(): Promise<{
   let locationsCount = 0;
   let transfersCount = 0;
   let usersCount = 0;
+  let logosCount = 0;
 
   try {
+    // Migrate Logos/System Settings
+    try {
+      const systemData = await firestoreQuery(projectId, apiKey, "system");
+      if (systemData.documents && systemData.documents.length > 0) {
+        const doc = systemData.documents[0];
+        const fields = doc.fields || {};
+        const logoUrl = fields.logoUrl?.stringValue || fields.logo?.stringValue;
+        
+        if (logoUrl) {
+          await storage.saveSystemSettings({ logoUrl });
+          logosCount++;
+          console.log("Migrated system logo from Firebase");
+        }
+      }
+    } catch (error) {
+      console.log("No system settings found in Firebase or error retrieving them");
+    }
     // Migrate Products (with deduplication)
     const productsData = await firestoreQuery(projectId, apiKey, "products");
     const existingProducts = await storage.getAllProducts();
@@ -166,7 +185,7 @@ export async function migrateFirebaseData(): Promise<{
       }
     }
 
-    return { productsCount, locationsCount, transfersCount, usersCount };
+    return { productsCount, locationsCount, transfersCount, usersCount, logosCount };
   } catch (error) {
     console.error("Firebase migration error:", error);
     throw error;
