@@ -68,7 +68,7 @@ export class MemStorage implements IStorage {
     this.transfers = new Map();
     this.emailSettings = undefined;
 
-    // Create default admin user
+    // Create default test users
     this.createUser({
       email: "admin@fairfield.com",
       name: "Admin User",
@@ -84,6 +84,46 @@ export class MemStorage implements IStorage {
         "reports",
         "users",
         "integration",
+      ],
+      active: true,
+    });
+
+    this.createUser({
+      email: "dispatch@fairfield.com",
+      name: "Dispatch User",
+      role: "dispatch",
+      permissions: [
+        "dashboard",
+        "products",
+        "locations",
+        "new-transfer",
+        "dispatch",
+        "all-transfers",
+      ],
+      active: true,
+    });
+
+    this.createUser({
+      email: "receiver@fairfield.com",
+      name: "Receiver User",
+      role: "receiver",
+      permissions: [
+        "dashboard",
+        "products",
+        "locations",
+        "receive",
+        "all-transfers",
+      ],
+      active: true,
+    });
+
+    this.createUser({
+      email: "viewer@fairfield.com",
+      name: "View Only User",
+      role: "view_only",
+      permissions: [
+        "dashboard",
+        "all-transfers",
       ],
       active: true,
     });
