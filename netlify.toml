@@ -1,0 +1,26 @@
+[build]
+command = "npm run build"
+functions = "functions"
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "20"
+NODE_ENV = "production"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[functions]
+node_bundler = "esbuild"
+included_files = ["dist/**"]
+
+[context.production]
+environment = { NODE_ENV = "production" }
+
+[context.preview]
+environment = { NODE_ENV = "production" }
+
+[context.deploy-preview]
+environment = { NODE_ENV = "production" }
