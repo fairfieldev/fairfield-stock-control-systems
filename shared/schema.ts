@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
+  password: text("password").notNull(), // hashed or plain for demo
   role: text("role").notNull(), // admin, dispatch, receiver, view_only
   permissions: json("permissions").$type<string[]>().default([]), // tab permissions
   active: boolean("active").notNull().default(true),

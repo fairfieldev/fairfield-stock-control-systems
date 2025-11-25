@@ -14,13 +14,19 @@ Enhanced Firebase-based Fairfield Stock Control System with professional React/E
 - Professional Linear-inspired clean interface
 
 #### 2. **Authentication & User Management**
-- **4 Role-Based Users** (all use password: `Password123` or `password`):
+- **4 Role-Based Users** (all use password: `Password123`):
   - **Admin** (admin@fairfield.com): Full access to all features
   - **Dispatch** (dispatch@fairfield.com): Create and dispatch transfers
   - **Receiver** (receiver@fairfield.com): Receive transfers, report issues
   - **View Only** (viewer@fairfield.com): Read-only dashboard access
+- **Password Management**:
+  - Passwords stored with each user (plain text for demo, ready for hashing in production)
+  - Add new users with custom passwords via User Management page
+  - Edit users to change their password (optional field when editing)
+  - Password validated during login
+  - Automatic sync to Firestore when users are created/updated/deleted
 - Role-based permission system with tab-level access control
-- Secure password validation (demo mode)
+- Secure password validation against stored user passwords
 
 #### 3. **Core Features Implemented**
 - **Dashboard**: Real-time overview of transfers and inventory
@@ -51,9 +57,11 @@ Enhanced Firebase-based Fairfield Stock Control System with professional React/E
   - All products with metadata
   - All locations and addresses
   - Complete transfer history (pending → dispatched → received)
-  - All users with roles and permissions
+  - All users with roles, permissions, AND passwords
+  - System logos and settings
 - **Environment-Based Configuration**: Firebase config via environment variables
 - **Migration Progress Tracking**: Returns count of migrated items
+- **Firestore REST API**: Uses Firestore REST API for migration (no SDK dependencies)
 
 ### API Endpoints
 
@@ -95,11 +103,14 @@ Enhanced Firebase-based Fairfield Stock Control System with professional React/E
 - `POST /api/migrate-firebase-data` - Migrate data from Firebase
 
 ### Database Schema
-- **Users**: ID, email, name, role, permissions, active status, createdAt
+- **Users**: ID, email, name, password, role, permissions, active status, createdAt
+  - Password is stored with each user and used for authentication
+  - Automatically synced to Firestore when user is created/updated/deleted
 - **Products**: ID, code, name, category, unit, createdAt
 - **Locations**: ID, name, address, createdAt
 - **Transfers**: Complete history with status tracking (pending/dispatched/received), items, driver info, dispatch/receive timestamps
 - **Email Settings**: Provider config, credentials, recipient email
+- **System Settings**: Logo URL and other system-level configurations
 - **Permissions**: Role-based access control rules
 
 ### Security Features
@@ -174,14 +185,17 @@ VITE_FIREBASE_APP_ID
 ```
 
 ### Recent Changes
-- ✅ Added password validation for authentication
-- ✅ Implemented Gmail SMTP integration with Nodemailer
-- ✅ Created Firebase migration service with deduplication
-- ✅ Extended email settings schema for multi-provider support
-- ✅ Added Integration Settings UI for email configuration
-- ✅ Added all 4 test users with proper permissions
-- ✅ Implemented idempotent data migration
-- ✅ Added comprehensive error handling
+- ✅ Added password field to user schema and storage
+- ✅ Implemented password-based authentication (validates against stored passwords)
+- ✅ Added password input field to User Management form (Option A)
+- ✅ Password validation on form submission (required for new users, optional for updates)
+- ✅ Automatic Firestore sync for user CRUD operations
+- ✅ Password field shown in login endpoint response (for testing, hidden in production)
+- ✅ Firebase migration now imports user passwords from Firestore
+- ✅ Default password "Password123" for migrated users without passwords
+- ✅ All 4 test users now use password: "Password123"
+- ✅ Created firebase-users.ts service for Firestore user operations
+- ✅ Form prevents password field exposure in user list display
 
 ### Known Limitations
 - Demo mode uses simple password authentication (not production-ready)

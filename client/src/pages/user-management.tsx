@@ -57,9 +57,10 @@ const ROLE_DEFAULTS: Record<string, string[]> = {
 export default function UserManagement() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<InsertUser>({
+  const [formData, setFormData] = useState<InsertUser & { password?: string }>({
     email: "",
     name: "",
+    password: "",
     role: "view_only",
     permissions: [],
     active: true,
@@ -103,6 +104,7 @@ export default function UserManagement() {
     setFormData({
       email: "",
       name: "",
+      password: "",
       role: "view_only",
       permissions: [],
       active: true,
@@ -111,8 +113,24 @@ export default function UserManagement() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password
+    if (!editingUser && !formData.password) {
+      toast({
+        title: "Password required",
+        description: "Please enter a password for the new user",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (editingUser) {
-      updateMutation.mutate({ id: editingUser.id, data: formData });
+      // For edit, only include password if it's being changed
+      const dataToUpdate = { ...formData };
+      if (!dataToUpdate.password) {
+        delete (dataToUpdate as any).password;
+      }
+      updateMutation.mutate({ id: editingUser.id, data: dataToUpdate });
     } else {
       createMutation.mutate(formData);
     }
@@ -123,6 +141,7 @@ export default function UserManagement() {
     setFormData({
       email: user.email,
       name: user.name,
+      password: "",
       role: user.role,
       permissions: user.permissions || [],
       active: user.active,
@@ -328,6 +347,19 @@ export default function UserManagement() {
                     required
                     data-testid="input-user-email"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password {editingUser && "(leave blank to keep current)"}</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password || ""}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="••••••••"
+                    required={!editingUser}
+                    data-testid="input-user-password"
+                  />
+                  <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
                 </div>
               </div>
 

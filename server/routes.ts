@@ -16,13 +16,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid credentials" });
       }
       
-      // For demo purposes, accept "password" or "Password123" for all users
-      // In production, this would verify against hashed passwords in the database
-      if (password !== "password" && password !== "Password123") {
+      // Verify password against user's stored password
+      if (password !== user.password) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
       
-      res.json(user);
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ error: "Login failed" });
     }

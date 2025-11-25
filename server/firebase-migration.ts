@@ -170,10 +170,12 @@ export async function migrateFirebaseData(): Promise<{
         
         try {
           const permissions = fields.permissions?.arrayValue?.values?.map((v: any) => v.stringValue || "") || [];
+          const password = fields.password?.stringValue || "Password123";
           
           await storage.createUser({
             email: userEmail,
             name: fields.name?.stringValue || fields.displayName?.stringValue || doc.name.split('/').pop(),
+            password,
             role: fields.role?.stringValue || "view_only",
             permissions,
             active: fields.active?.booleanValue !== false,

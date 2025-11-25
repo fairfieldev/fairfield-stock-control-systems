@@ -79,6 +79,7 @@ export class MemStorage implements IStorage {
     this.createUser({
       email: "admin@fairfield.com",
       name: "Admin User",
+      password: "Password123",
       role: "admin",
       permissions: [
         "dashboard",
@@ -98,6 +99,7 @@ export class MemStorage implements IStorage {
     this.createUser({
       email: "dispatch@fairfield.com",
       name: "Dispatch User",
+      password: "Password123",
       role: "dispatch",
       permissions: [
         "dashboard",
@@ -113,6 +115,7 @@ export class MemStorage implements IStorage {
     this.createUser({
       email: "receiver@fairfield.com",
       name: "Receiver User",
+      password: "Password123",
       role: "receiver",
       permissions: [
         "dashboard",
@@ -127,6 +130,7 @@ export class MemStorage implements IStorage {
     this.createUser({
       email: "viewer@fairfield.com",
       name: "View Only User",
+      password: "Password123",
       role: "view_only",
       permissions: [
         "dashboard",
@@ -157,6 +161,19 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.users.set(id, user);
+    
+    // Sync to Firestore
+    try {
+      const { saveUserToFirestore } = await import("./firebase-users");
+      const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+      const apiKey = process.env.VITE_FIREBASE_API_KEY;
+      if (projectId && apiKey) {
+        await saveUserToFirestore(projectId, apiKey, user);
+      }
+    } catch (error) {
+      console.error("Failed to sync user to Firestore:", error);
+    }
+    
     return user;
   }
 
@@ -166,11 +183,36 @@ export class MemStorage implements IStorage {
 
     const updated = { ...user, ...data };
     this.users.set(id, updated);
+    
+    // Sync to Firestore
+    try {
+      const { saveUserToFirestore } = await import("./firebase-users");
+      const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+      const apiKey = process.env.VITE_FIREBASE_API_KEY;
+      if (projectId && apiKey) {
+        await saveUserToFirestore(projectId, apiKey, updated);
+      }
+    } catch (error) {
+      console.error("Failed to sync user to Firestore:", error);
+    }
+    
     return updated;
   }
 
   async deleteUser(id: string): Promise<void> {
     this.users.delete(id);
+    
+    // Sync to Firestore
+    try {
+      const { deleteUserFromFirestore } = await import("./firebase-users");
+      const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+      const apiKey = process.env.VITE_FIREBASE_API_KEY;
+      if (projectId && apiKey) {
+        await deleteUserFromFirestore(projectId, apiKey, id);
+      }
+    } catch (error) {
+      console.error("Failed to sync user deletion to Firestore:", error);
+    }
   }
 
   // Products
