@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -12,10 +14,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Printer } from "lucide-react";
+import { QRCodeSVG as QRCode } from "qrcode.react";
 import type { Transfer, Location, Product } from "@shared/schema";
 
 export default function Transfers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [barcodeSearch, setBarcodeSearch] = useState("");
 
   const { data: transfers = [], isLoading: transfersLoading } = useQuery<Transfer[]>({
     queryKey: ["/api/transfers"],
@@ -50,8 +54,9 @@ export default function Transfers() {
     }
   };
 
+  const effectiveSearchTerm = barcodeSearch || searchTerm;
   const filteredTransfers = transfers.filter((transfer) => {
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = effectiveSearchTerm.toLowerCase();
     const fromLocation = getLocationName(transfer.fromLocationId).toLowerCase();
     const toLocation = getLocationName(transfer.toLocationId).toLowerCase();
     
@@ -147,14 +152,31 @@ export default function Transfers() {
           <CardTitle>Transfer History</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <input
-            type="text"
-            placeholder="Search by location or transfer ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            data-testid="input-search-transfers"
-          />
+          <div className="space-y-2">
+            <Input
+              type="text"
+              placeholder="Search by location or transfer ID..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setBarcodeSearch("");
+              }}
+              className="w-full"
+              data-testid="input-search-transfers"
+            />
+            <Input
+              type="text"
+              placeholder="Or scan barcode here..."
+              value={barcodeSearch}
+              onChange={(e) => {
+                setBarcodeSearch(e.target.value);
+                setSearchTerm("");
+              }}
+              className="w-full"
+              data-testid="input-barcode-scan"
+              autoFocus
+            />
+          </div>
 
           {transfersLoading ? (
             <p className="text-center text-muted-foreground py-8">Loading transfers...</p>
@@ -167,21 +189,31 @@ export default function Transfers() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Barcode</TableHead>
                     <TableHead>ID</TableHead>
                     <TableHead>From</TableHead>
                     <TableHead>To</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Items</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Dispatched</TableHead>
-                    <TableHead>Received</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransfers.map((transfer) => (
                     <TableRow key={transfer.id} data-testid={`row-transfer-${transfer.id}`}>
-                      <TableCell className="font-mono text-sm" data-testid={`text-id-${transfer.id}`}>
-                        {transfer.id.substring(0, 8)}...
+                      <TableCell className="text-center" data-testid={`barcode-cell-${transfer.id}`}>
+                        <QRCode 
+                          value={transfer.id} 
+                          size={50}
+                          level="L"
+                          includeMargin={false}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm cursor-pointer hover:text-primary" data-testid={`text-id-${transfer.id}`}>
+                        <Link href={`/transfers/${transfer.id}`}>
+                          {transfer.id.substring(0, 12)}...
+                        </Link>
                       </TableCell>
                       <TableCell data-testid={`text-from-${transfer.id}`}>
                         {getLocationName(transfer.fromLocationId)}
@@ -200,15 +232,12 @@ export default function Transfers() {
                       <TableCell className="text-sm" data-testid={`text-created-${transfer.id}`}>
                         {new Date(transfer.createdAt).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-sm" data-testid={`text-dispatched-${transfer.id}`}>
-                        {transfer.dispatchedAt
-                          ? new Date(transfer.dispatchedAt).toLocaleDateString()
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="text-sm" data-testid={`text-received-${transfer.id}`}>
-                        {transfer.receivedAt
-                          ? new Date(transfer.receivedAt).toLocaleDateString()
-                          : "-"}
+                      <TableCell>
+                        <Link href={`/transfers/${transfer.id}`}>
+                          <Button size="sm" variant="outline" data-testid={`button-view-${transfer.id}`}>
+                            View
+                          </Button>
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

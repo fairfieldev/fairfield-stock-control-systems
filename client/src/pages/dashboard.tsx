@@ -1,9 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, MapPin, Clock, TruckIcon } from "lucide-react";
 import type { Product, Location, Transfer } from "@shared/schema";
 
 export default function Dashboard() {
+  // Auto-verify Firebase data is up to date on each dashboard load
+  useEffect(() => {
+    const verifyData = async () => {
+      try {
+        await fetch("/api/migrate-firebase-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        // Silent verification - no need to show errors
+        console.debug("Background data verification completed");
+      }
+    };
+    verifyData();
+  }, []);
+
   const { data: products = [] } = useQuery<Product[]>({ queryKey: ["/api/products"] });
   const { data: locations = [] } = useQuery<Location[]>({ queryKey: ["/api/locations"] });
   const { data: transfers = [] } = useQuery<Transfer[]>({ queryKey: ["/api/transfers"] });

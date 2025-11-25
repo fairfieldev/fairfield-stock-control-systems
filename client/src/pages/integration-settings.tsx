@@ -30,7 +30,6 @@ export default function IntegrationSettings() {
     apiKey: "",
   });
   const [isTesting, setIsTesting] = useState(false);
-  const [isMigrating, setIsMigrating] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
@@ -93,25 +92,6 @@ export default function IntegrationSettings() {
   const handleTestEmail = () => {
     setIsTesting(true);
     testMutation.mutate();
-  };
-
-  const handleMigrateData = async () => {
-    try {
-      setIsMigrating(true);
-      const response = await apiRequest("POST", "/api/migrate-firebase-data") as any;
-      toast({
-        title: "Migration successful!",
-        description: `Migrated ${response.stats.productsCount} products, ${response.stats.locationsCount} locations, ${response.stats.transfersCount} transfers, and ${response.stats.usersCount} users.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Migration failed",
-        description: "Could not migrate Firebase data. Please check the logs.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsMigrating(false);
-    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -396,58 +376,19 @@ export default function IntegrationSettings() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Firebase Data Migration
-              </CardTitle>
-              <CardDescription>
-                Import your existing data from Firebase to this system
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Firebase Data Sync
+          </CardTitle>
+          <CardDescription>
+            Your data is automatically synced with Firebase on every login
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-md border border-amber-200 dark:border-amber-900">
-            <div className="flex gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="text-sm text-amber-900 dark:text-amber-100 font-medium">
-                  Important: Read Before Migrating
-                </p>
-                <ul className="text-sm text-amber-800 dark:text-amber-200 list-disc list-inside space-y-1">
-                  <li>This will import all products, locations, transfers, and users from your existing Firebase system</li>
-                  <li>The migration will attempt to preserve all existing data relationships</li>
-                  <li>Duplicate items (by code/name) will be skipped to avoid conflicts</li>
-                  <li>This operation is idempotent - you can run it multiple times safely</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              onClick={handleMigrateData}
-              disabled={isMigrating}
-              data-testid="button-migrate-firebase"
-            >
-              <Database className="h-4 w-4 mr-2" />
-              {isMigrating ? "Migrating..." : "Migrate Firebase Data"}
-            </Button>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            <p>
-              <strong>What gets migrated:</strong>
+        <CardContent>
+          <div className="bg-green-50 dark:bg-green-950 p-4 rounded-md border border-green-200 dark:border-green-900">
+            <p className="text-sm text-green-900 dark:text-green-100">
+              ✓ Automatic synchronization is enabled. Your data will be kept up to date with Firebase on each login without any manual action required.
             </p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>All products with their codes, names, categories, and units</li>
-              <li>All locations with addresses</li>
-              <li>All transfer orders with their complete history (pending, dispatched, received)</li>
-              <li>All users with their roles and permissions</li>
-            </ul>
           </div>
         </CardContent>
       </Card>

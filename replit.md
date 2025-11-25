@@ -193,6 +193,13 @@ VITE_FIREBASE_APP_ID
 - ✅ No more manual migration button needed - happens transparently in background
 - ✅ Users never see Firebase sync errors (happens silently even if it fails)
 - ✅ Reports page shows transfer statistics, filtering, and comprehensive data
+- ✅ Removed manual migration button from Integration Settings
+- ✅ Added auto-verification on each dashboard load
+- ✅ Created transfer detail page (/transfers/:id) with complete information
+- ✅ Added QR code barcode to every transfer (scannable)
+- ✅ Added barcode search input on transfers list (works with barcode scanners)
+- ✅ Added print individual transfer report functionality
+- ✅ Each transfer row is now clickable to view full details
 
 ### Session 1 Changes (Permissions & Access)
 - ✅ Fixed "Access Denied" pages: Created missing All Transfers page (/transfers route)
