@@ -86,19 +86,19 @@ function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <div className="px-4 py-4">
-            {logoUrl && (
-              <div className="mb-3 flex justify-center">
+            <div className="flex items-center gap-3 mb-4">
+              {logoUrl && (
                 <img 
                   src={logoUrl} 
                   alt="Logo" 
-                  className="h-12 w-auto object-contain"
+                  className="h-16 w-16 object-contain flex-shrink-0"
                   data-testid="logo-sidebar"
                 />
-              </div>
-            )}
-            <SidebarGroupLabel className="text-lg font-bold">
-              Fairfield Stock Control
-            </SidebarGroupLabel>
+              )}
+              <SidebarGroupLabel className="text-xl font-bold leading-tight">
+                Fairfield Stock Control
+              </SidebarGroupLabel>
+            </div>
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
