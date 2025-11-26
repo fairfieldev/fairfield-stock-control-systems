@@ -86,7 +86,7 @@ function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <div className="px-4 py-4">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 justify-start">
               {logoUrl && (
                 <img 
                   src={logoUrl} 
