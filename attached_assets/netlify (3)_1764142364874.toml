@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+[[redirects]]
+  from = "/order"
+  to = "/.netlify/functions/shopify-proxy"
+  status = 200
